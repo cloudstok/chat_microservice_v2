@@ -1,6 +1,6 @@
 import { type PoolConnection, type PoolOptions, createPool } from "mysql2/promise";
 import { sleep } from "bun";
-import { dbConfigTable } from "./tables";
+import { configTable } from "./tables";
 import type { ILoadDBConfigData } from "../interfaces";
 
 export let DB_TABLES_LIST: string[] = [];
@@ -35,7 +35,7 @@ export class DbConnect {
             this.pool = await createPool(this.dbConfig).getConnection();
             if (!this.pool) throw new Error("unable to connect");
 
-            await this.pool.execute(dbConfigTable)
+            await this.pool.execute(configTable)
 
             console.log("DB Connection Successful");
             this.retryCount = 0;
@@ -55,7 +55,7 @@ export class DbConnect {
     }
 
     async loadDbTablesList() {
-        const [configs]: any = await this.pool.query(`select * from db_config where is_active = true`);
+        const [configs]: any = await this.pool.query(`select * from config_master where is_active = true`);
         configs.forEach((e: ILoadDBConfigData) => {
             DB_TABLES_LIST = e.value
         });

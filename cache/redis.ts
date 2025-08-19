@@ -5,19 +5,25 @@ export class RedisClient {
     connection!: RedisClientType;
     maxRetries: number = 5;
     retryCount = 0;
+    host: string = process.env.REDIS_HOST || "localhost";
+    port: string = process.env.REDIS_PORT || "6379";
+    pass: string = process.env.REDIS_PASSWORD || "";
 
     async connect(): Promise<void> {
         try {
+
             this.connection = createClient({
-                url: `redis://localhost:6379`,
-                password: ""
+                url: `redis://${this.host}:${this.port}`,
+                password: this.pass,
             });
             this.connection.on("error", async (err) => {
                 console.error("Redis Client Error", err.message);
                 await this.handleReconnect();
             });
+
             await this.connection.connect();
             if (this.connection) console.info("redis connection successful");
+
             return;
         } catch (error: any) {
             console.error("error", error.message);

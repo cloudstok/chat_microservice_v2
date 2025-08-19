@@ -1,5 +1,5 @@
-export const dbConfigTable = `
-create table if not exists db_config(
+export const configTable = `
+create table if not exists config_master(
     id int auto_increment primary key,
     data_key varchar(50) not null,
     value json not null,

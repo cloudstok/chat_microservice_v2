@@ -9,6 +9,8 @@ export const checkAuth = async (socket: Socket, next: Function) => {
         const newUser = await getUserDetail({ token });
         if (!newUser || newUser.status === false) {
             console.log("Authentication failed: User not found or invalid token");
+            socket.emit("Error", "Authentication failed: User not found or invalid token");
+            socket.disconnect(true);
             return next(
                 new Error("Authentication error: Failed to authenticate user")
             );

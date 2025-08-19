@@ -8,6 +8,7 @@ import { ChatHandler } from "./handlers/chat";
 import { checkAuth } from "./middlewares/socketAuth.ts";
 import { socketRouter } from "./routes/socket.ts";
 import { startJobs } from "./jobs/cron.ts";
+import { router as indexRouter } from "./routes/index.ts";
 
 config({ path: ".env" });
 
@@ -30,5 +31,7 @@ export let chat: ChatHandler;
 serverIo
     .use(async (s: Socket, n: Function) => await checkAuth(s, n))
     .on("connection", async (s: Socket) => await socketRouter(serverIo, s));
+
+app.use("/", indexRouter);
 
 httpServer.listen(PORT, () => console.log("server running on port", PORT))

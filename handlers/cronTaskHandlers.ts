@@ -14,6 +14,7 @@ export class CronTasks {
     async createNewTable() {
         for (const table of DB_TABLES_LIST) {
             const exists = await this.tableService.tableExits(this.dbName, table);
+            console.log(table, "exists ?", exists);
             if (!exists) {
                 await this.tableService.createNewTable(table);
                 console.log(`${table} created successfully`);
@@ -26,7 +27,8 @@ export class CronTasks {
     }
     async deleteOldChats() {
         for (const table of DB_TABLES_LIST) {
-            await this.chatService.deleteOldChats(table);
+            const exists = await this.tableService.tableExits(this.dbName, table);
+            if (exists) await this.chatService.deleteOldChats(table);
         }
         return;
     }

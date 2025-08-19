@@ -146,6 +146,8 @@ export class ChatHandler {
     async getChats(room: string): Promise<IChatMsg[]> {
         let chats = await this.redis.getCache(room);
         if (!chats || !Array.isArray(chats) || chats.length < 50) {
+            const exists = await this.tablesService.tableExits(this.dbName, room)
+            if (!exists) await this.tablesService.createNewTable(room);
             chats = await this.chatService.loadChats(room);
             await this.redis.setCache(room, chats);
         }

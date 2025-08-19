@@ -45,7 +45,7 @@ export class ChatHandler {
         if (socket.rooms.size >= 2) return this.emitErr(socket, "already present in another room");
         socket.join(room);
         this.io.to(room).emit("PlCount", await this.incrementRoomCount(room))
-        this.emitMsg(room, `${socket.id} joined the room`);
+        // this.emitMsg(room, `${socket.id} joined the room`);
         await this.getRoomMsgs(socket, room);
         return;
     }

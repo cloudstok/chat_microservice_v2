@@ -12,6 +12,16 @@ export class ChatService {
         const [data]: any = await this.pool.execute(query, Object.values(args));
         return data.insertId;
     }
+    async getMsg(game: string, msgId: string | number) {
+        const query = `select * from ${game} where id = ?`;
+        const [data]: any = await this.pool.query(query, [msgId]);
+        return data[0];
+    }
+    async likeMsg(game: string, msgId: string | number, likes: { user_id: string, operatorId: string }[]) {
+        const query = `update ${game} set user_likes = ? where id = ?`;
+        const [data]: any = await this.pool.execute(query, [likes, msgId]);
+        return data;
+    }
     async loadChats(table: string) {
         const query = `select * from ${table} order by created_at desc limit 50`;
         const [chats]: any = await this.pool.query(query);

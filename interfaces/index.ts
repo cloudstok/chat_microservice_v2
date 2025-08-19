@@ -37,6 +37,7 @@ export interface ILoadDBConfigData extends ILoadConfigData {
 }
 
 export interface IChatMsg {
+    id: number;
     user_id: string,
     operator_id: string,
     avatar: number,

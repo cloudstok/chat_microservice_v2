@@ -9,12 +9,12 @@ export const socketRouter = async (io: Server, socket: Socket) => {
         socket.on("join", async (room: string) => await chat.joinRoom(socket, room));
         socket.on("leave", async (room: string) => await chat.leaveRoom(socket, room));
         socket.on("send", async (data: string) => await chat.sendMsg(socket, data));
+        socket.on("like", async (data: string) => await chat.likeMsg(socket, data));
 
         socket.on("disconnect", async () => {
             await chat.leaveRoom(socket);
             console.log(socket.id, "disconnected")
         })
-
 
     } catch (error: any) {
         console.error("error occured:", error.message)

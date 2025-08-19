@@ -33,7 +33,7 @@ export interface ILoadConfigData {
 }
 
 export interface ILoadDBConfigData extends ILoadConfigData {
-    value: string[];
+    value: string[] | Record<string, string[]>;
 }
 
 export interface IChatMsg {

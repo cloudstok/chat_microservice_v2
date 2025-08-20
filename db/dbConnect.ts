@@ -1,9 +1,10 @@
 import { type PoolConnection, type PoolOptions, createPool } from "mysql2/promise";
 import { sleep } from "bun";
 import { configTable } from "./tables";
-import type { ILoadDBConfigData } from "../interfaces";
+import type { ILoadDBConfigData, TableCategory } from "../interfaces";
 
 export let DB_TABLES_LIST: string[] = [];
+export let DB_TABLES_CAT: Record<TableCategory, string[]>;
 
 export class DbConnect {
     static instance: DbConnect
@@ -57,9 +58,13 @@ export class DbConnect {
     async loadDbTablesList() {
         const [configs]: any = await this.pool.query(`select * from config_master where is_active = true`);
         configs.forEach((e: ILoadDBConfigData) => {
-            DB_TABLES_LIST = e.value
+            switch (e.data_key) {
+                case "db_tables_list": DB_TABLES_LIST = e.value as string[]; break;
+                case "db_tables_cat": DB_TABLES_CAT = e.value as Record<string, string[]>; break;
+                default: break;
+            }
         });
-        console.log(DB_TABLES_LIST);
+        console.log({ DB_TABLES_LIST, DB_TABLES_CAT });
         return;
     }
 

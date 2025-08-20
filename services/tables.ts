@@ -1,28 +1,14 @@
 import type { PoolConnection } from "mysql2/promise";
 import { dbInstance } from "..";
+import { getTableQuery } from "../db/tables";
 
 export class TablesService {
     pool!: PoolConnection;
+    getTableQuery: (tableName: string) => string;
     constructor() {
+        this.getTableQuery = getTableQuery;
         (async () => { this.pool = await dbInstance.getPool(); })();
     }
-
-    getTableQuery(tableName: string): string {
-        return `
-            CREATE TABLE IF NOT EXISTS ${tableName} (
-            id INT PRIMARY KEY AUTO_INCREMENT,
-            user_id VARCHAR(128) NOT NULL,
-            operator_id VARCHAR(64) NOT NULL,
-            avatar INT DEFAULT NULL,
-        --  name VARCHAR(128) DEFAULT NULL,
-            msg TEXT DEFAULT NULL,
-            gif TEXT DEFAULT NULL,
-            user_likes json DEFAULT null,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `;
-    }
-
 
     async tableExits(dbName: string, tableName: string): Promise<boolean> {
         try {

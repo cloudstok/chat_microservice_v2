@@ -34,4 +34,4 @@ serverIo
 
 app.use("/", indexRouter);
 
-httpServer.listen(PORT, () => console.log("server running on port", PORT))
+httpServer.listen(PORT, () => console.log("server running on port", PORT));

@@ -1,8 +1,8 @@
 import { Socket, type Server } from "socket.io";
 import type { RedisClient } from "../cache/redis";
-import { DB_TABLES_LIST, DB_TABLES_LIST as roomsList } from "../db/dbConnect";
+import { DB_TABLES_CAT, DB_TABLES_LIST, DB_TABLES_LIST as roomsList } from "../db/dbConnect";
 import { ChatService } from "../services/chats";
-import type { IChatMsg } from "../interfaces";
+import type { IChatMsg, TableCategory } from "../interfaces";
 import { TablesService } from "../services/tables";
 import { getRandomAvatarIndex } from "../utils/avatar";
 
@@ -74,23 +74,52 @@ export class ChatHandler {
     }
 
     async sendMsg(socket: Socket, data: string) {
+        const [room, urId, operatorId, ...m] = data.split(":");
+        const msg = m.join(":");
+        console.log("this.sendMsg called", room, msg, socket.id);
 
-        const [room, urId, operatorId, msg] = data.split(":");
-        console.log("this.sendMsg called", room, msg, socket.id)
-        if (!DB_TABLES_LIST.includes(room)) return this.emitErr(socket, "room doesn't exists/ invalid room id");
-        if (!socket.rooms.has(room)) return this.emitErr(socket, "room not joined yet");
+        if (!DB_TABLES_LIST.includes(room))
+            return this.emitErr(socket, "room doesn't exist / invalid room id");
+
+        if (!socket.rooms.has(room))
+            return this.emitErr(socket, "room not joined yet");
 
         const chats = await this.getChats(room);
+        if (chats.length >= 50) chats.shift(); // keep last 50
+
+        const isUrl = /^https?:\/\//.test(msg);
+
         const userMsg = {
             user_id: urId,
             operator_id: operatorId,
             avatar: getRandomAvatarIndex(urId),
-            // name: info.urNm,
-            msg: msg,
-            gif: msg,
-            user_likes: []
         } as unknown as IChatMsg;
-        chats.shift();
+
+        for (const cat of Object.keys(DB_TABLES_CAT) as TableCategory[]) {
+            if (DB_TABLES_CAT[cat].includes(room)) {
+                switch (cat) {
+                    case "like_gif":
+                        userMsg.user_likes = [];
+                        userMsg.msg = isUrl ? "" : msg;
+                        userMsg.gif = isUrl ? msg : "";
+                        break;
+                    case "no_like_gif":
+                        userMsg.msg = isUrl ? "" : msg;
+                        userMsg.gif = isUrl ? msg : "";
+                        break;
+                    case "like_no_gif":
+                        if (isUrl) return this.emitErr(socket, "gifs are not allowed in this chat room")
+                        userMsg.user_likes = [];
+                        userMsg.msg = msg;
+                        break;
+                    case "no_like_no_gif":
+                        if (isUrl) return this.emitErr(socket, "gifs are not allowed in this chat room")
+                        userMsg.msg = msg;
+                        break;
+                }
+                break; // stop after first match
+            }
+        }
 
         const exists = await this.tablesService.tableExits(this.dbName, room);
         if (!exists) await this.tablesService.createNewTable(room);
@@ -105,13 +134,15 @@ export class ChatHandler {
         await this.redis.setCache(room, chats);
 
         this.emitMsg(room, userMsg);
-        return;
     }
+
 
     async likeMsg(socket: Socket, data: string) {
 
         const [room, urId, operatorId, msgId] = data.split(":");
+
         if (!DB_TABLES_LIST.includes(room)) return this.emitErr(socket, "room doesn't exists/ invalid room id");
+        if (!DB_TABLES_CAT.like_gif.includes(room) || !DB_TABLES_CAT.like_no_gif.includes(room)) return this.emitErr(socket, "not allowed to like msg in this chat room")
         if (!socket.rooms.has(room)) return this.emitErr(socket, "room not joined yet");
         if (!msgId) return this.emitErr(socket, "invalid msg id");
 

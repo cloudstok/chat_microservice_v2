@@ -142,7 +142,7 @@ export class ChatHandler {
         const [room, urId, operatorId, msgId] = data.split(":");
 
         if (!DB_TABLES_LIST.includes(room)) return this.emitErr(socket, "room doesn't exists/ invalid room id");
-        if (!DB_TABLES_CAT.like_gif.includes(room) || !DB_TABLES_CAT.like_no_gif.includes(room)) return this.emitErr(socket, "not allowed to like msg in this chat room")
+        if (!DB_TABLES_CAT.like_gif.includes(room) && !DB_TABLES_CAT.like_no_gif.includes(room)) return this.emitErr(socket, "not allowed to like msg in this chat room")
         if (!socket.rooms.has(room)) return this.emitErr(socket, "room not joined yet");
         if (!msgId) return this.emitErr(socket, "invalid msg id");
 
@@ -150,7 +150,11 @@ export class ChatHandler {
         if (!msgFromDb) return this.emitErr(socket, "msg with id not found");
 
         const like: { user_id: string, operator_id: string } = { user_id: urId, operator_id: operatorId }
-        if (Array.isArray(msgFromDb.user_likes) && msgFromDb.user_likes.length) msgFromDb.user_likes.push(like)
+        if (Array.isArray(msgFromDb.user_likes) && msgFromDb.user_likes.length) {
+            const isAlreadyLiked = msgFromDb.user_likes.find(e => e.user_id == urId && e.operator_id == operatorId);
+            if (isAlreadyLiked) return this.emitErr(socket, "already liked!");
+            msgFromDb.user_likes.push(like)
+        }
         else msgFromDb.user_likes = [like];
 
         await this.chatService.likeMsg(room, msgId, msgFromDb.user_likes)

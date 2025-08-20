@@ -1,10 +1,10 @@
 import { type PoolConnection, type PoolOptions, createPool } from "mysql2/promise";
 import { sleep } from "bun";
 import { configTable } from "./tables";
-import type { ILoadDBConfigData } from "../interfaces";
+import type { ILoadDBConfigData, TableCategory } from "../interfaces";
 
 export let DB_TABLES_LIST: string[] = [];
-export let DB_TABLES_CAT: Record<string, string[]>;
+export let DB_TABLES_CAT: Record<TableCategory, string[]>;
 
 export class DbConnect {
     static instance: DbConnect

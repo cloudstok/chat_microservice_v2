@@ -1,40 +1,14 @@
 import type { PoolConnection } from "mysql2/promise";
 import { dbInstance } from "..";
-import { DB_TABLES_CAT } from "../db/dbConnect";
+import { getTableQuery } from "../db/tables";
 
 export class TablesService {
     pool!: PoolConnection;
+    getTableQuery: (tableName: string) => string;
     constructor() {
+        this.getTableQuery = getTableQuery;
         (async () => { this.pool = await dbInstance.getPool(); })();
     }
-
-    getTableQuery(tableName: string): string {
-        const query = {
-            like: `CREATE TABLE IF NOT EXISTS ${tableName} (
-            id INT PRIMARY KEY AUTO_INCREMENT,
-            user_id VARCHAR(128) NOT NULL,
-            operator_id VARCHAR(64) NOT NULL,
-            avatar INT DEFAULT NULL,
-            msg TEXT DEFAULT NULL,
-            gif TEXT DEFAULT NULL,
-            user_likes json DEFAULT null,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );`,
-            no_like: `CREATE TABLE IF NOT EXISTS ${tableName} (
-            id INT PRIMARY KEY AUTO_INCREMENT,
-            user_id VARCHAR(128) NOT NULL,
-            operator_id VARCHAR(64) NOT NULL,
-            avatar INT DEFAULT NULL,
-            msg TEXT DEFAULT NULL,
-            gif TEXT DEFAULT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );`
-        }
-        let returnQuery = ""
-        DB_TABLES_CAT["like"].includes(tableName) ? returnQuery = query["like"] : returnQuery = query["no_like"]
-        return returnQuery; // default with like
-    }
-
 
     async tableExits(dbName: string, tableName: string): Promise<boolean> {
         try {

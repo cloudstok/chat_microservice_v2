@@ -24,6 +24,8 @@ export type TRedisConfig = {
     password: string;
 }
 
+export type TableCategory = "like_gif" | "no_like_gif" | "like_no_gif" | "no_like_no_gif";
+
 export interface ILoadConfigData {
     id: number;
     data_key: string;
@@ -43,7 +45,7 @@ export interface IChatMsg {
     avatar: number,
     // name: string,
     msg: string,
-    gif: string,
-    user_likes: any[],
+    gif?: string,
+    user_likes?: any[],
     created_at?: string
 }

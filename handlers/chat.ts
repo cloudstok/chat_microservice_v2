@@ -74,9 +74,9 @@ export class ChatHandler {
     }
 
     async sendMsg(socket: Socket, data: string) {
-        const [room, urId, operatorId, ...m] = data.split(":");
-        const msg = m.join(":");
-        console.log("this.sendMsg called", room, msg, socket.id);
+        const [room, urId, operatorId, msg, ...g] = data.split(":");
+        const gif = g.join(":");
+        console.log("this.sendMsg called", room, msg, gif, socket.id);
 
         if (!DB_TABLES_LIST.includes(room))
             return this.emitErr(socket, "room doesn't exist / invalid room id");
@@ -87,7 +87,7 @@ export class ChatHandler {
         const chats = await this.getChats(room);
         if (chats.length >= 50) chats.shift(); // keep last 50
 
-        const isUrl = /^https?:\/\//.test(msg);
+        const isUrl = /^https?:\/\//.test(gif);
 
         const userMsg = {
             user_id: urId,
@@ -100,12 +100,12 @@ export class ChatHandler {
                 switch (cat) {
                     case "like_gif":
                         userMsg.user_likes = [];
-                        userMsg.msg = isUrl ? "" : msg;
-                        userMsg.gif = isUrl ? msg : "";
+                        userMsg.msg = msg ? msg : "";
+                        userMsg.gif = gif && isUrl ? gif : "";
                         break;
                     case "no_like_gif":
-                        userMsg.msg = isUrl ? "" : msg;
-                        userMsg.gif = isUrl ? msg : "";
+                        userMsg.msg = msg ? msg : "";
+                        userMsg.gif = gif && isUrl ? gif : "";
                         break;
                     case "like_no_gif":
                         if (isUrl) return this.emitErr(socket, "gifs are not allowed in this chat room")
@@ -149,13 +149,9 @@ export class ChatHandler {
         const msgFromDb: IChatMsg = await this.chatService.getMsg(room, msgId);
         if (!msgFromDb) return this.emitErr(socket, "msg with id not found");
 
-        const like: { user_id: string, operator_id: string } = { user_id: urId, operator_id: operatorId }
-        if (Array.isArray(msgFromDb.user_likes) && msgFromDb.user_likes.length) {
-            const isAlreadyLiked = msgFromDb.user_likes.find(e => e.user_id == urId && e.operator_id == operatorId);
-            if (isAlreadyLiked) return this.emitErr(socket, "already liked!");
-            msgFromDb.user_likes.push(like)
-        }
-        else msgFromDb.user_likes = [like];
+        const likes = this.toggleLike(msgFromDb.user_likes, urId, operatorId);
+        msgFromDb.user_likes = likes;
+        console.log(msgFromDb.user_likes);
 
         await this.chatService.likeMsg(room, msgId, msgFromDb.user_likes)
 
@@ -170,6 +166,29 @@ export class ChatHandler {
         this.emitChatToRoom(room, chats);
 
         return;
+    }
+
+
+    async getOldChats(socket: Socket, data: string) {
+        const [room, l, o] = data.split(":")
+        const [limit, offset] = [l, o].map(e => Number(e))
+
+        if (!DB_TABLES_LIST.includes(room)) return this.emitErr(socket, "room doesn't exists/ invalid room id");
+        if (!room || !socket.rooms.has(room)) return this.emitErr(socket, "room not joined yet");
+
+        const chats = this.chatService.loadChats(room, limit, offset);
+        socket.emit("Chats", chats);
+        return
+    }
+
+    toggleLike(userLikes: { user_id: string, operator_id: string }[] = [], urId: string, operatorId: string) {
+        const idx = userLikes.findIndex(e => e.user_id === urId && e.operator_id === operatorId);
+        if (idx !== -1) {
+            userLikes.splice(idx, 1); // remove
+        } else {
+            userLikes.push({ user_id: urId, operator_id: operatorId });
+        }
+        return userLikes;
     }
 
     async getRoomMsgs(socket: Socket, room: string): Promise<void> {

@@ -10,6 +10,7 @@ export const socketRouter = async (io: Server, socket: Socket) => {
         socket.on("leave", async (room: string) => await chat.leaveRoom(socket, room));
         socket.on("send", async (data: string) => await chat.sendMsg(socket, data));
         socket.on("like", async (data: string) => await chat.likeMsg(socket, data));
+        socket.on("load_chats", async (data) => await chat.getOldChats(socket, data))
 
         socket.on("disconnect", async () => {
             await chat.leaveRoom(socket);

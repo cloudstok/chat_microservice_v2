@@ -22,8 +22,8 @@ export class ChatService {
         const [data]: any = await this.pool.execute(query, [likes, msgId]);
         return data;
     }
-    async loadChats(table: string, limit: number = 50) {
-        const query = `select * from ${table} order by created_at desc limit ${limit}`;
+    async loadChats(table: string, limit: number = 50, offset: number = 0) {
+        const query = `select * from ${table} order by created_at desc limit ${limit} offset ${offset}`;
         const [chats]: any = await this.pool.query(query);
         return chats.reverse();
     }

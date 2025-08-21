@@ -176,7 +176,7 @@ export class ChatHandler {
         if (!DB_TABLES_LIST.includes(room)) return this.emitErr(socket, "room doesn't exists/ invalid room id");
         if (!room || !socket.rooms.has(room)) return this.emitErr(socket, "room not joined yet");
 
-        const chats = this.chatService.loadChats(room, limit, offset);
+        const chats = await this.chatService.loadChats(room, limit, offset);
         socket.emit("Chats", chats);
         return
     }

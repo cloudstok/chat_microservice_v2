@@ -6,8 +6,8 @@ import type { ILoadDBConfigData, TableCategory } from "../interfaces";
 export let DB_TABLES_LIST: string[] = [];
 export let DB_TABLES_CAT: Record<TableCategory, string[]>;
 
-export class DbConnect {
-    static instance: DbConnect
+export class DbConnectRead {
+    static readInstance: DbConnectRead;
     maxRetryCount: number;
     retryCount: number = 0;
     protected pool!: PoolConnection;
@@ -15,7 +15,7 @@ export class DbConnect {
 
     constructor() {
         this.dbConfig = {
-            host: process.env.DB_HOST,
+            host: process.env.DB_READ_HOST,
             port: Number(process.env.DB_PORT) || 3306,
             user: process.env.DB_USER,
             password: process.env.DB_PASSWORD,
@@ -24,9 +24,10 @@ export class DbConnect {
         this.maxRetryCount = Number(process.env.DB_MAX_RETRIES) || 5;
     };
 
-    static getInstance() {
-        if (!this.instance) this.instance = new DbConnect();
-        return this.instance;
+
+    static getReadInstance() {
+        if (!this.readInstance) this.readInstance = new DbConnectRead();
+        return this.readInstance;
     }
 
     async initDbPoolConnection() {
@@ -66,6 +67,62 @@ export class DbConnect {
         });
         console.log({ DB_TABLES_LIST, DB_TABLES_CAT });
         return;
+    }
+
+    async getPool() {
+        if (!this.pool) { console.log("pool not found"); await this.initDbPoolConnection(); }
+        return this.pool;
+    }
+}
+
+export class DbConnectWrite {
+    static writeInstance: DbConnectWrite;
+    maxRetryCount: number;
+    retryCount: number = 0;
+    protected pool!: PoolConnection;
+    dbConfig: PoolOptions;
+
+    constructor() {
+        this.dbConfig = {
+            host: process.env.DB_HOST,
+            port: Number(process.env.DB_PORT) || 3306,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_NAME || "",
+        };
+        this.maxRetryCount = Number(process.env.DB_MAX_RETRIES) || 5;
+    };
+
+
+    static getWriteInstance() {
+        if (!this.writeInstance) this.writeInstance = new DbConnectWrite();
+        return this.writeInstance;
+    }
+
+    async initDbPoolConnection() {
+        console.log("try number", this.retryCount);
+        try {
+
+            this.pool = await createPool(this.dbConfig).getConnection();
+            if (!this.pool) throw new Error("unable to connect");
+
+            await this.pool.execute(configTable)
+
+            console.log("DB Connection Successful");
+            this.retryCount = 0;
+
+            return;
+        } catch (error: any) {
+
+            this.retryCount++
+            console.error("error occured", error.message, " retry count number", this.retryCount);
+
+            if (this.retryCount > this.maxRetryCount) process.exit(1);
+            else {
+                await sleep(1000);
+                await this.initDbPoolConnection();
+            }
+        }
     }
 
     async getPool() {

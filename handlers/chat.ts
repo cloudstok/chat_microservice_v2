@@ -121,8 +121,8 @@ export class ChatHandler {
             }
         }
 
-        const exists = await this.tablesService.tableExits(this.dbName, room);
-        if (!exists) await this.tablesService.createNewTable(room);
+        // const exists = await this.tablesService.tableExits(this.dbName, room);
+        // if (!exists) await this.tablesService.createNewTable(room);
 
         const id = await this.chatService.create(room, userMsg);
         if (!id) return this.emitErr(socket, "unable to send message");
@@ -133,7 +133,7 @@ export class ChatHandler {
         chats.push(userMsg);
         await this.redis.setCache(room, chats);
 
-        this.emitMsg(room, userMsg);
+        return this.emitMsg(room, userMsg);
     }
 
 

@@ -74,7 +74,7 @@ export class ChatHandler {
     }
 
     async sendMsg(socket: Socket, data: string) {
-        const [room, urId, operatorId, msg, ...g] = data.split(":");
+        const [room, urId, operatorId, avatar, msg, ...g] = data.split(":");
         const gif = g.join(":");
         console.log("this.sendMsg called", room, msg, gif, socket.id);
 
@@ -92,7 +92,7 @@ export class ChatHandler {
         const userMsg = {
             user_id: urId,
             operator_id: operatorId,
-            avatar: getRandomAvatarIndex(urId),
+            avatar: avatar ? avatar : getRandomAvatarIndex(urId),
         } as unknown as IChatMsg;
 
         for (const cat of Object.keys(DB_TABLES_CAT) as TableCategory[]) {

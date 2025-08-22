@@ -1,5 +1,5 @@
 import type { PoolConnection } from "mysql2/promise";
-import { dbRead, dbWrite } from "..";
+import { dbInstance } from "..";
 import { getTableQuery } from "../db/tables";
 
 export class TablesService {
@@ -9,8 +9,8 @@ export class TablesService {
     constructor() {
         this.getTableQuery = getTableQuery;
         (async () => {
-            this.rPool = await dbRead.getPool();
-            this.wPool = await dbWrite.getPool()
+            this.rPool = await dbInstance.getPool("READ");
+            this.wPool = await dbInstance.getPool("WRITE")
         })();
     }
 
@@ -35,6 +35,6 @@ export class TablesService {
     }
 
     async updateTablesList() {
-        return await dbRead.loadDbTablesList();
+        return await dbInstance.loadDbTablesList();
     }
 }

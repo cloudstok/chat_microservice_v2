@@ -2,7 +2,7 @@ import express from "express";
 import http from "http";
 import { Server, Socket } from "socket.io";
 import { config } from "dotenv";
-import { DbConnectRead, DbConnectWrite } from "./db/dbConnect";
+import { DbConnect } from "./db/dbConnect";
 import { RedisClient } from "./cache/redis.ts";
 import { ChatHandler } from "./handlers/chat";
 import { checkAuth } from "./middlewares/socketAuth.ts";
@@ -17,14 +17,12 @@ export const app = express();
 export const httpServer = http.createServer(app);
 export const serverIo = new Server(httpServer, { cors: { origin: "*" } })
 export const redis = new RedisClient();
-export let dbRead: DbConnectRead = DbConnectRead.getReadInstance();
-export let dbWrite: DbConnectWrite = DbConnectWrite.getWriteInstance();
+export let dbInstance: DbConnect = DbConnect.getInstance();
 export let chat: ChatHandler;
 
 (async () => {
-    await dbRead.initDbPoolConnection();
-    await dbRead.loadDbTablesList();
-    await dbWrite.initDbPoolConnection();
+    await dbInstance.initDbPools();
+    await dbInstance.loadDbTablesList();
     await redis.connect();
     chat = new ChatHandler(serverIo, redis);
     startJobs();

@@ -74,7 +74,8 @@ export class ChatHandler {
     }
 
     async sendMsg(socket: Socket, data: string) {
-        const [room, urId, operatorId, avatar, msg, ...g] = data.split(":");
+        const [room, urId, operatorId, avtr, msg, ...g] = data.split(":");
+        const avatar = Number(avtr);
         const gif = g.join(":");
         console.log("this.sendMsg called", room, msg, gif, socket.id);
 

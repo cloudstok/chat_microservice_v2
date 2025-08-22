@@ -25,7 +25,7 @@ export type TRedisConfig = {
 }
 
 export type TableCategory = "like_gif" | "no_like_gif" | "like_no_gif" | "no_like_no_gif";
-
+export type TPool = "READ" | "WRITE";
 export interface ILoadConfigData {
     id: number;
     data_key: string;

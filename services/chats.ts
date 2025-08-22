@@ -1,13 +1,13 @@
 import type { PoolConnection } from "mysql2/promise";
-import { dbRead, dbWrite } from "..";
+import { dbInstance } from "..";
 
 export class ChatService {
     private rPool!: PoolConnection
     private wPool!: PoolConnection
     constructor() {
         (async () => {
-            this.rPool = await dbRead.getPool();
-            this.wPool = await dbWrite.getPool()
+            this.rPool = await dbInstance.getPool("READ");
+            this.wPool = await dbInstance.getPool("WRITE")
         })();
     }
     async create(game: string, args: any) {

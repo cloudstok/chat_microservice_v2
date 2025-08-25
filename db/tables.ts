@@ -12,6 +12,16 @@ create table if not exists config_master(
 
 export const getTableQuery = (tableName: string): string => {
     const tableQuery: Record<TableCategory, string> = {
+        old_crash: `CREATE TABLE IF NOT EXISTS ${tableName} (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            user_id VARCHAR(128) NOT NULL,
+            operator_id VARCHAR(64) NOT NULL,
+            avatar TEXT DEFAULT NULL,
+            msg TEXT DEFAULT NULL,
+            gif TEXT DEFAULT NULL,
+            user_likes json DEFAULT null,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );`,
         like_gif: `CREATE TABLE IF NOT EXISTS ${tableName} (
             id INT PRIMARY KEY AUTO_INCREMENT,
             user_id VARCHAR(128) NOT NULL,

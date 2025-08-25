@@ -24,7 +24,7 @@ export type TRedisConfig = {
     password: string;
 }
 
-export type TableCategory = "like_gif" | "no_like_gif" | "like_no_gif" | "no_like_no_gif";
+export type TableCategory = "old_crash" | "like_gif" | "no_like_gif" | "like_no_gif" | "no_like_no_gif";
 export type TPool = "READ" | "WRITE";
 export interface ILoadConfigData {
     id: number;
@@ -43,9 +43,16 @@ export interface IChatMsg {
     user_id: string,
     operator_id: string,
     avatar: number,
-    // name: string,
     msg: string,
     gif?: string,
     user_likes?: any[],
     created_at?: string
 }
+
+export interface ISendMsgPayload {
+    room: string; urId: string; operatorId: string; avtr: number | string; msg: string; gif: string;
+}
+
+export interface ILikeMsgPayload {
+    room: string; urId: string; operatorId: string; msgId: number;
+}   

@@ -2,7 +2,7 @@ import { Socket, type Server } from "socket.io";
 import type { RedisClient } from "../cache/redis";
 import { DB_TABLES_CAT, DB_TABLES_LIST, DB_TABLES_LIST as roomsList } from "../db/dbConnect";
 import { ChatService } from "../services/chats";
-import type { IChatMsg, TableCategory } from "../interfaces";
+import type { IChatMsg, ILikeMsgPayload, ISendMsgPayload, TableCategory } from "../interfaces";
 import { TablesService } from "../services/tables";
 import { getRandomAvatarIndex } from "../utils/avatar";
 
@@ -39,7 +39,7 @@ export class ChatHandler {
         return socket.emit("Error", errMsg);
     }
 
-    async joinRoom(socket: Socket, room: string) {
+    async joinRoom(socket: Socket, { room }: { room: string }) {
         if (!DB_TABLES_LIST.includes(room)) return this.emitErr(socket, "room doesn't exists/ invalid room id");
         if (socket.rooms.has(room)) return this.emitErr(socket, "already joined the room");
         if (socket.rooms.size >= 2) return this.emitErr(socket, "already present in another room");
@@ -50,7 +50,7 @@ export class ChatHandler {
         return;
     }
 
-    async leaveRoom(socket: Socket, room?: string) {
+    async leaveRoom(socket: Socket, { room }: { room?: string }) {
         let roomsToLeave = [];
         if (room && !socket.rooms.has(room)) return this.emitErr(socket, "already left the room");
         if (room && !roomsList.includes(room)) return this.emitErr(socket, "invalid room")
@@ -73,11 +73,10 @@ export class ChatHandler {
         return;
     }
 
-    async sendMsg(socket: Socket, data: string) {
-        const [room, urId, operatorId, avtr, msg, ...g] = data.split(":");
-        const avatar = Number(avtr);
-        const gif = g.join(":");
-        console.log("this.sendMsg called", room, msg, gif, socket.id);
+    async sendMsg(socket: Socket, data: ISendMsgPayload) {
+        const { room, urId, operatorId, avtr, msg, gif } = data
+
+        console.log("this.sendMsg called", { room, urId, operatorId, avtr, msg, gif });
 
         if (!DB_TABLES_LIST.includes(room))
             return this.emitErr(socket, "room doesn't exist / invalid room id");
@@ -93,12 +92,17 @@ export class ChatHandler {
         const userMsg = {
             user_id: urId,
             operator_id: operatorId,
-            avatar: avatar ? avatar : getRandomAvatarIndex(urId),
+            avatar: avtr || getRandomAvatarIndex(urId),
         } as unknown as IChatMsg;
 
         for (const cat of Object.keys(DB_TABLES_CAT) as TableCategory[]) {
             if (DB_TABLES_CAT[cat].includes(room)) {
                 switch (cat) {
+                    case "old_crash":
+                        userMsg.msg = msg ? msg : "";
+                        userMsg.gif = gif && isUrl ? gif : "";
+                        userMsg.user_likes = [];
+                        break;
                     case "like_gif":
                         userMsg.user_likes = [];
                         userMsg.msg = msg ? msg : "";
@@ -118,7 +122,7 @@ export class ChatHandler {
                         userMsg.msg = msg;
                         break;
                 }
-                break; // stop after first match
+                break;
             }
         }
 
@@ -138,9 +142,9 @@ export class ChatHandler {
     }
 
 
-    async likeMsg(socket: Socket, data: string) {
+    async likeMsg(socket: Socket, data: ILikeMsgPayload) {
 
-        const [room, urId, operatorId, msgId] = data.split(":");
+        const { room, urId, operatorId, msgId } = data
 
         if (!DB_TABLES_LIST.includes(room)) return this.emitErr(socket, "room doesn't exists/ invalid room id");
         if (!DB_TABLES_CAT.like_gif.includes(room) && !DB_TABLES_CAT.like_no_gif.includes(room)) return this.emitErr(socket, "not allowed to like msg in this chat room")

@@ -37,8 +37,9 @@ app.use("/", indexRouter);
 httpServer.listen(PORT, () => console.log("server running on port", PORT));
 
 // let x = {
-//     DB_TABLES_LIST: ["aviator", "jetx", "rocket_queen", "tropicana", "cricketx", "crashRoyale", "astronaut"],
+//     DB_TABLES_LIST: ["aviator_old","aviator", "jetx", "rocket_queen", "tropicana", "cricketx", "crashRoyale", "astronaut"],
 //     DB_TABLES_CAT: {
+//        old_crash: ["aviator_old"],
 //         like_gif: ["aviator"],
 //         like_no_gif: [],
 //         no_like_gif: ["rocket_queen", "tropicana", "astronaut"],
